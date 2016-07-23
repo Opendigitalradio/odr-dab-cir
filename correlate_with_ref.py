@@ -40,58 +40,68 @@ T_TF = 196608
 print("Reading phase reference")
 phase_ref = np.fromfile("phasereference.2048000.fc64.iq", np.complex64)
 
-# As we do not want to correlate of the whole recording that might be
-# containing several transmission frames, we first look for the null symbol in the
-# first 96ms
+def calc_cir(channel, start_ix):
+    """Calculate correlation with phase reference"""
 
-print("Searching for NULL symbol")
-
-# Calculate power on blocks of length 2656 over the first 96ms. To gain speed,
-# we move the blocks by 10 samples.
-
-channel_out_power = np.array([np.abs(channel_out[t:t+T_NULL]).sum() for t in range(0, T_TF-T_NULL, 10)])
-
-# Look where the power is smallest, this gives the index where the NULL starts.
-# Because if the subsampling, we need to multiply the index.
-
-t_null = 10 * channel_out_power.argmin()
-
-print("  NULL symbol starts at ix={}".format(t_null))
-
-# The synchronisation channel occupies 5208 T and contains NULL symbol and
-# phase reference symbol. The phase reference symbol is 5208 - 2656 = 2552 T
-# long.
-
-if len(phase_ref) != 2552:
-    print("Warning: phase ref len is {} != 2552".format(len(phase_ref)))
+    channel_out
 
 
-# We want to correlate our known phase reference symbol against the received
-# signal, and give us some more margin about the exact position of the NULL
-# symbol.
-print("Correlating")
+    # As we do not want to correlate of the whole recording that might be
+    # containing several transmission frames, we first look for the null symbol in the
+    # first 96ms
+    print("Searching for NULL symbol")
 
-# We start a bit earlier than the end of the null symbol
-corr_start_ix = t_null + T_NULL - 50
+    # Calculate power on blocks of length 2656 over the first 96ms. To gain speed,
+    # we move the blocks by N samples.
+    N = 20
+    channel_out_power = np.array([np.abs(channel[start_ix+t:start_ix+t+T_NULL]).sum() for t in range(0, T_TF-T_NULL, N)])
 
-# In TM1, the longest spacing between carrier components one can allow is
-# around 504 T (246us, or74km at speed of light). This gives us a limit
-# on the number of correlations it makes sense to do.
+    # Look where the power is smallest, this gives the index where the NULL starts.
+    # Because if the subsampling, we need to multiply the index.
+    t_null = N * channel_out_power.argmin()
 
-max_component_delay = 1000 # T
+    print("  NULL symbol starts at ix={}".format(t_null))
 
-cir = np.array([np.abs(np.corrcoef(channel_out[corr_start_ix + i:corr_start_ix + phase_ref.size + i], phase_ref)[0,1]) for i in range(max_component_delay)])
+    # The synchronisation channel occupies 5208 T and contains NULL symbol and
+    # phase reference symbol. The phase reference symbol is 5208 - 2656 = 2552 T
+    # long.
+    if len(phase_ref) != 2552:
+        print("Warning: phase ref len is {} != 2552".format(len(phase_ref)))
+
+
+    # We want to correlate our known phase reference symbol against the received
+    # signal, and give us some more margin about the exact position of the NULL
+    # symbol.
+    print("Correlating")
+
+    # We start a bit earlier than the end of the null symbol
+    corr_start_ix = t_null + T_NULL - 50
+
+    # In TM1, the longest spacing between carrier components one can allow is
+    # around 504 T (246us, or74km at speed of light). This gives us a limit
+    # on the number of correlations it makes sense to do.
+    max_component_delay = 500 # T
+
+    cir = np.array([np.abs(np.corrcoef(channel[start_ix + corr_start_ix + i:start_ix + corr_start_ix + phase_ref.size + i], phase_ref)[0,1]) for i in range(max_component_delay)])
+    return cir
+
+num_correlations = int(len(channel_out) / T_TF)
+print("Doing {} correlations".format(num_correlations))
+
+cirs = np.array([
+    calc_cir(channel_out, i * T_TF)
+    for i in range(num_correlations) ])
+
+print("Plotting")
+
+pp.subplot(211)
+pp.plot(cirs.sum(axis=0))
+pp.subplot(212)
+pp.imshow(cirs)
 
 print("Done")
 
-fig = pp.figure()
-ax = fig.add_subplot(111)
-hi = ax.plot(channel_out_power)
-
-fig = pp.figure()
-ax = fig.add_subplot(111)
-hi = ax.plot(cir)
-
 pp.show()
+
 
 
