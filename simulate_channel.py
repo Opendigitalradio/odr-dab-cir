@@ -1,15 +1,22 @@
 #!/usr/bin/env python
 #
-# Adds additional components to the test.16.iq file, which is
-# an array of complex floats, and save it as
-# test.16.14.25.iq
+# Adds additional components to the input file, which is
+# an array of complex floats, and save it as a new file
 #
 # Licence: see LICENCE file
 
 import numpy as np
 import matplotlib.pyplot as pp
+import sys
 
-file_in = "test.16.iq"
+if len(sys.argv) != 3:
+    print("Usage")
+    print(" script <filename_input> <filename_output>")
+    print(" input and output files are fc64 format")
+    sys.exit(1)
+
+file_in = sys.argv[1]
+file_out = sys.argv[2]
 
 
 # Simulate the channel with several components,
@@ -37,5 +44,5 @@ for delay, ampl in CIR:
 
 # The simulated channel output is in channel_out
 
-channel_out.tofile("test.16.14.25.iq")
+channel_out.tofile(file_out)
 
