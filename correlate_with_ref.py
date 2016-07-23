@@ -78,12 +78,17 @@ def calc_cir(channel, start_ix):
     corr_start_ix = t_null + T_NULL - 50
 
     # In TM1, the longest spacing between carrier components one can allow is
-    # around 504 T (246us, or74km at speed of light). This gives us a limit
+    # around 504 T (246us, or 74km at speed of light). This gives us a limit
     # on the number of correlations it makes sense to do.
     max_component_delay = 500 # T
 
     cir = np.array([np.abs(np.corrcoef(channel[start_ix + corr_start_ix + i:start_ix + corr_start_ix + phase_ref.size + i], phase_ref)[0,1]) for i in range(max_component_delay)])
-    return cir
+
+    # In order to be able to compare measurements accross transmission frames,
+    # we normalise the CIR against channel power
+    channel_power = np.abs(channel[start_ix:start_ix+T_TF]).sum()
+
+    return cir / channel_power
 
 num_correlations = int(len(channel_out) / T_TF)
 print("Doing {} correlations".format(num_correlations))
