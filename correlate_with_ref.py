@@ -8,11 +8,12 @@ import numpy as np
 import matplotlib.pyplot as pp
 import sys
 
-if len(sys.argv) != 3:
+if len(sys.argv) < 2:
     print("Usage")
-    print(" script [fc64|u8] <filename>")
+    print(" script [fc64|u8] <filename> [<figure filename>]")
     print(" fc64: file is 32-bit float I + 32-bit float Q")
     print(" u8:   file is 8-bit unsigned I + 8-bit unsigned Q")
+    print(" if <figure filename> is given, save the figure instead of showing it")
     sys.exit(1)
 
 print("Reading file")
@@ -27,6 +28,10 @@ if sys.argv[1] == "u8":
     channel_out = channel_out3.astype(np.complex64) / 256.0 - (0.5+0.5j)
 elif sys.argv[1] == "fc64":
     channel_out = np.fromfile(file_in, np.complex64)
+
+file_figure = None
+if len(sys.argv) == 4:
+    file_figure = sys.argv[3]
 
 print("  File contains {} samples ({}ms)".format(
     len(channel_out), len(channel_out) / 2048000.0))
@@ -106,7 +111,10 @@ pp.imshow(cirs)
 
 print("Done")
 
-pp.show()
+if file_figure:
+    pp.savefig(file_figure)
+else:
+    pp.show()
 
 
 
