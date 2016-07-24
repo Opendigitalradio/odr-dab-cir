@@ -53,7 +53,7 @@ class RTLSDR_CIR_Runner(mp.Process):
                 pass
 
     def do_one_cir_run(self):
-        rtlsdr = subprocess.Popen(self.rtl_sdr_cmdline)
+        rtlsdr = subprocess.Popen(self.rtl_sdr_cmdline, shell=True)
         rtlsdr.wait()
 
         # The RTLSDR outputs u8 format
@@ -98,11 +98,8 @@ if __name__ == '__main__':
     FIG_FILE = "static/rtlsdr.svg"
 
     # Build the rtl_sdr command line from the settings in config
-    rtl_sdr_cmdline = shlex.split("rtl_sdr -f {} -n {} -s {} {}".format(
-        cli_args.freq, cli_args.samps, cli_args.rate, IQ_FILE))
-
-    rtl_sdr_cmdline = shlex.split("cp -v /home/bram/dab/autocorr/limus-zh2.100.14.25.trunc.iq {}".format(
-        IQ_FILE))
+    rtl_sdr_cmdline = shlex.split("rtl_sdr -f {} -s {} -g 20 -S - | dd of={} bs=2 count={}".format(
+        cli_args.freq, cli_args.rate, IQ_FILE, cli_args.samps))
 
     rtlsdr_cir = RTLSDR_CIR_Runner(rtl_sdr_cmdline, IQ_FORMAT, IQ_FILE, FIG_FILE)
     rtlsdr_cir.start()
