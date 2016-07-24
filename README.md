@@ -28,6 +28,10 @@ To read in a recording using a RTL-SDR receiver, use:
 
 replace 1966080 (ten Mode 1 transmission frames) by a larger value if you want.
 
+Then feed the data to the script
+
+    ./correlate_with_ref.py u8 DAB_9A_10_u8_G20.iq
+
 
 Requirements
 ------------
