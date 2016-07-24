@@ -25,11 +25,15 @@ class CIR_Correlate:
             channel_out2 = channel_out1.reshape(2, int(len(channel_out1)/2))
             channel_out3 = channel_out2[0,...] + 1j * channel_out2[1,...]
             self.channel_out = channel_out3.astype(np.complex64) / 256.0 - (0.5+0.5j)
-        elif sys.argv[1] == "fc64":
+        elif iq_format == "fc64":
             self.channel_out = np.fromfile(iq_filename, np.complex64)
+        else:
+            raise ValueError("Unsupported format {}".format(iq_format))
 
-        print("  File contains {} samples ({}ms)".format(
-            len(self.channel_out), len(self.channel_out) / 2048000.0))
+        print("  File contains {} samples ({}ms, {} transmission frames)".format(
+            len(self.channel_out),
+            len(self.channel_out) / 2048000.0,
+            len(self.channel_out) / T_TF))
 
         # Keep track of where the NULL symbols are located
         self.null_symbol_ixs = []
@@ -97,7 +101,7 @@ class CIR_Correlate:
         pp.subplot(212)
         pp.imshow(cirs)
 
-        if file_figure:
+        if plot_file:
             pp.savefig(plot_file)
         else:
             pp.show()
