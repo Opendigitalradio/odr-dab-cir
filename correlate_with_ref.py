@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 #
-# Correlate with the phase reference symbol
+# Find NULL symbols in file, then correlate with the phase reference symbol and
+# plot the resulting correlation result.
 #
-# Licence: see LICENCE file
+# This will display the Channel Impulse Reference
+#
+# Copyright (C) 2016
+# Matthias P. Braendli, matthias.braendli@mpb.li
+# http://www.opendigitalradio.org
+# Licence: The MIT License, see LICENCE file
 
 import numpy as np
 import matplotlib.pyplot as pp
@@ -21,10 +27,13 @@ class CIR_Correlate:
         self.phase_ref = np.fromfile("phasereference.2048000.fc64.iq", np.complex64)
 
         if iq_format == "u8":
-            channel_out1 = np.fromfile(iq_filename, np.uint8)
-            channel_out2 = channel_out1.reshape(2, int(len(channel_out1)/2))
-            channel_out3 = channel_out2[0,...] + 1j * channel_out2[1,...]
-            self.channel_out = channel_out3.astype(np.complex64) / 256.0 - (0.5+0.5j)
+            channel_u8_interleaved = np.fromfile(iq_filename, np.uint8)
+            channel_u8_iq = channel_u8_interleaved.reshape(int(len(channel_u8_interleaved)/2), 2)
+            # This directly converts to fc64
+            channel_fc64_unscaled = channel_u8_iq[...,0] + np.complex64(1j) * channel_u8_iq[...,1]
+            channel_fc64_scaled = (channel_fc64_unscaled - 127.0) / 128.0
+            channel_fc64_dc_comp = channel_fc64_scaled - np.average(channel_fc64_scaled)
+            self.channel_out = channel_fc64_dc_comp
         elif iq_format == "fc64":
             self.channel_out = np.fromfile(iq_filename, np.complex64)
         else:
@@ -99,7 +108,7 @@ class CIR_Correlate:
         pp.subplot(211)
         pp.plot(cirs.sum(axis=0))
         pp.subplot(212)
-        pp.imshow(cirs)
+        pp.imshow(cirs, aspect='auto')
 
         if plot_file:
             pp.savefig(plot_file)
@@ -112,7 +121,7 @@ if __name__ == "__main__":
         print("Usage")
         print(" script [fc64|u8] <filename> [<figure filename>]")
         print(" fc64: file is 32-bit float I + 32-bit float Q")
-        print(" u8:   file is 8-bit unsigned I + 8-bit unsigned Q")
+        print(" u8:   file is 8-bit signed I + 8-bit signed Q")
         print(" if <figure filename> is given, save the figure instead of showing it")
         sys.exit(1)
 
@@ -125,7 +134,13 @@ if __name__ == "__main__":
         file_figure = sys.argv[3]
 
     cir_corr = CIR_Correlate(file_in, file_format)
+
     cir_corr.plot(file_figure)
+
+    print("Null symbols at:")
+    print("  " + " ".join("{}".format(t_null)
+        for t_null in cir_corr.null_symbol_ixs))
+
     print("Done")
 
 
