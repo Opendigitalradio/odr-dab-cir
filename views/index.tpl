@@ -15,7 +15,9 @@
         <div id="general">
             <p>General Options</p>
             <ul>
-                <li>rtl_sdr command line: {{rtl_sdr_cmdline}}</li>
+                <li>frequency: {{freq}}</li>
+                <li>gain: {{gain}}</li>
+                <li>rate: {{rate}}</li>
             </ul>
         </div>
 

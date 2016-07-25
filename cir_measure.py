@@ -15,6 +15,7 @@ import sys
 from bottle import route, run, template, static_file, request
 import subprocess
 import time
+import datetime
 import multiprocessing as mp
 import correlate_with_ref
 import shlex
@@ -35,9 +36,10 @@ class RTLSDR_CIR_Runner(mp.Process):
 
         self.events = mp.Queue()
 
-        self.freq = options.freq
-        self.rate = options.rate
-        self.samps = options.samps
+        self.freq = float(options.freq)
+        self.rate = int(options.rate)
+        self.samps = int(options.samps)
+        self.gain = float(options.gain)
 
         self.iq_file = iq_file
         self.fig_file = fig_file
@@ -62,7 +64,7 @@ class RTLSDR_CIR_Runner(mp.Process):
 
     def do_one_cir_run(self):
         # Build the rtl_sdr command line from the settings in config
-        rtl_sdr_cmdline = shlex.split("rtl_sdr -f {} -s {} -g 20 -S -".format(self.freq, self.rate))
+        rtl_sdr_cmdline = shlex.split("rtl_sdr -f {} -s {} -g {} -S -".format(self.freq, self.rate, self.gain))
         dd_cmdline = shlex.split("dd of={} bs=2 count={}".format(self.iq_file, self.samps))
 
         # To avoid calling the shell, we do the pipe between rtlsdr and dd using Popen
@@ -79,12 +81,18 @@ class RTLSDR_CIR_Runner(mp.Process):
         # The RTLSDR outputs u8 format
         print("Starting correlation")
         cir_corr = correlate_with_ref.CIR_Correlate(self.iq_file, "u8")
-        cir_corr.plot(self.fig_file)
+
+        title = "Correlation on {}kHz done at {}".format(
+                int(self.freq / 1000),
+                datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
+        cir_corr.plot(self.fig_file, title)
 
 @route('/')
 def index():
     return template('index',
-            rtl_sdr_cmdline = "rtl_sdr",
+            freq = cli_args.freq,
+            rate = cli_args.rate,
+            gain = cli_args.gain,
             fig_file = FIG_FILE)
 
 @route('/static/<filename:path>')
@@ -104,6 +112,7 @@ if __name__ == '__main__':
             default=10*196608,
             help='Number of samples to analyse in one run, one transmission frame at 2048000 samples per second is 196608 samples',
             required=False)
+    parser.add_argument('--gain', default=20, help='Gain setting for rtl_sdr', required=False)
 
     parser.add_argument('--rate', default='2048000', help='Samplerate for RTLSDR receiver (2048000)', required=False)
 

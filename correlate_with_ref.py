@@ -108,7 +108,7 @@ class CIR_Correlate:
 
         return cir / channel_power
 
-    def plot(self, plot_file):
+    def plot(self, plot_file, title):
         num_correlations = int(len(self.channel_out) / T_TF)
 
         self.null_symbol_ixs = []
@@ -118,6 +118,7 @@ class CIR_Correlate:
             for i in range(num_correlations) ])
 
         fig = pp.figure()
+        fig.suptitle(title)
         ax1 = fig.add_subplot(211)
         ax1.plot(cirs.sum(axis=0))
         ax2 = fig.add_subplot(212)
@@ -150,7 +151,7 @@ if __name__ == "__main__":
 
     cir_corr = CIR_Correlate(file_in, file_format)
 
-    cir_corr.plot(file_figure)
+    cir_corr.plot(file_figure, "Correlation")
 
     print("Null symbols at:")
     print("  " + " ".join("{}".format(t_null)
