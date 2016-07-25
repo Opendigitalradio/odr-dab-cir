@@ -11,6 +11,15 @@
 # Licence: The MIT License, see LICENCE file
 
 import numpy as np
+import matplotlib
+
+# When running on a machine that has no X server running, the normal
+# matplotlib backend won't work. In case we are running as a module by cir_measure,
+# switch to the Agg backend
+# See http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
+if __name__ != "__main__":
+    matplotlib.use("Agg")
+
 import matplotlib.pyplot as pp
 import sys
 
@@ -50,6 +59,7 @@ class CIR_Correlate:
     def calc_one_cir_(self, start_ix):
         """Calculate correlation with phase reference for one start index"""
 
+        print("Correlation at {}".format(start_ix))
         channel = self.channel_out
 
         # As we do not want to correlate of the whole recording that might be
@@ -101,19 +111,24 @@ class CIR_Correlate:
     def plot(self, plot_file):
         num_correlations = int(len(self.channel_out) / T_TF)
 
+        self.null_symbol_ixs = []
+
         cirs = np.array([
             self.calc_one_cir_(i * T_TF)
             for i in range(num_correlations) ])
 
-        pp.subplot(211)
-        pp.plot(cirs.sum(axis=0))
-        pp.subplot(212)
-        pp.imshow(cirs, aspect='auto')
+        fig = pp.figure()
+        ax1 = fig.add_subplot(211)
+        ax1.plot(cirs.sum(axis=0))
+        ax2 = fig.add_subplot(212)
+        ax2.imshow(cirs, aspect='auto')
 
         if plot_file:
-            pp.savefig(plot_file)
+            print("Save to file {}".format(plot_file))
+            fig.savefig(plot_file)
         else:
-            pp.show()
+            print("Plotting to screen")
+            fig.show()
 
 
 if __name__ == "__main__":
