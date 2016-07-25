@@ -15,11 +15,25 @@ Right now there are three scripts:
   Each reflexion has a delay and an amplitude factor.
 
 * cir_measure.py: Runs a small webserver that does the correlation
-  all the time and updates a webpage (INCOMPLETE! NOT FUNCTIONAL!)
+  all the time and updates a webpage
 
 Example image: ![Example correlation](./example_corr.png)
 
 The image shows the received CIR of a real DAB signal captured with the RTLSDR.
+
+Webserver
+---------
+
+To run the webserver on all network interfaces, receiving on 202.928MHz:
+
+    ./cir_measure.py --host 0.0.0.0 --port 8080 --freq 202928000
+
+More options are available (gain, number of samples), see the help with
+
+    ./cir_measure.py -h
+
+Offline processing
+------------------
 
 To read in a recording using a RTL-SDR receiver, use:
 
@@ -34,13 +48,15 @@ Then feed the data to the script
 
 
 Requirements
-------------
-Python with NumPy and matplotlib
+============
+librtlsdr and its tools.
+
+Python with NumPy and matplotlib.
 
 The iq files must be complex float or interleaved unsigned 8-bit.
 
 
 Licence
--------
+=======
 MIT. See LICENCE for details.
 
