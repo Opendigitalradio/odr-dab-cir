@@ -17,10 +17,11 @@ import matplotlib
 # matplotlib backend won't work. In case we are running as a module by cir_measure,
 # switch to the Agg backend
 # See http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
+# And http://matplotlib.org/examples/api/agg_oo.html#api-agg-oo
 if __name__ != "__main__":
-    matplotlib.use("Agg")
+    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
-import matplotlib.pyplot as pp
+import matplotlib.figure
 import sys
 
 # T = 1/2048000 s
@@ -117,7 +118,12 @@ class CIR_Correlate:
             self.calc_one_cir_(i * T_TF)
             for i in range(num_correlations) ])
 
-        fig = pp.figure()
+        if plot_file:
+            fig = matplotlib.figure.Figure()
+            canvas = FigureCanvas(fig)
+        else:
+            fig = matplotlib.figure()
+
         fig.suptitle(title)
         ax1 = fig.add_subplot(211)
         ax1.plot(cirs.sum(axis=0))
@@ -126,7 +132,7 @@ class CIR_Correlate:
 
         if plot_file:
             print("Save to file {}".format(plot_file))
-            fig.savefig(plot_file)
+            canvas.print_figure(plot_file)
         else:
             print("Plotting to screen")
             fig.show()
