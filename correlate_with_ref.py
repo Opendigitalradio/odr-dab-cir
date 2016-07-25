@@ -20,6 +20,8 @@ import matplotlib
 # And http://matplotlib.org/examples/api/agg_oo.html#api-agg-oo
 if __name__ != "__main__":
     from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+else:
+    import matplotlib.pyplot as pp
 
 import matplotlib.figure
 import sys
@@ -122,7 +124,7 @@ class CIR_Correlate:
             fig = matplotlib.figure.Figure()
             canvas = FigureCanvas(fig)
         else:
-            fig = matplotlib.figure()
+            fig = pp.figure()
 
         fig.suptitle(title)
         ax1 = fig.add_subplot(211)
@@ -135,7 +137,7 @@ class CIR_Correlate:
             canvas.print_figure(plot_file)
         else:
             print("Plotting to screen")
-            fig.show()
+            pp.show()
 
 
 if __name__ == "__main__":
