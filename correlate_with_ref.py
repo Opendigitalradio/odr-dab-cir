@@ -33,13 +33,27 @@ T_NULL = 2656
 T_TF = 196608
 
 class CIR_Correlate:
-    def __init__(self, iq_filename, iq_format):
-        """Read phase reference from fixed file and load IQ data from
-        iq_filename. iq_format must be fc64 or u8"""
+    def __init__(self, iq_filename="", iq_format=None, iq_data=None):
+        """Either call with iq_filename, or with iq_data containing
+        a np.array with the data.
+
+        This class will then read phase reference from fixed file and
+        load IQ data from iq_filename, or use iq_data directly.
+
+        iq_format must be fc64 or u8"""
+
+        if iq_format is None:
+            raise ValueError("Incorrect initialisation")
+
         self.phase_ref = np.fromfile("phasereference.2048000.fc64.iq", np.complex64)
 
         if iq_format == "u8":
-            channel_u8_interleaved = np.fromfile(iq_filename, np.uint8)
+            if iq_filename:
+                channel_u8_interleaved = np.fromfile(iq_filename, np.uint8)
+            elif iq_data is not None:
+                channel_u8_interleaved = iq_data
+            else:
+                raise ValueError("Must give iq_filename or iq_data")
             channel_u8_iq = channel_u8_interleaved.reshape(int(len(channel_u8_interleaved)/2), 2)
             # This directly converts to fc64
             channel_fc64_unscaled = channel_u8_iq[...,0] + np.complex64(1j) * channel_u8_iq[...,1]
@@ -47,7 +61,12 @@ class CIR_Correlate:
             channel_fc64_dc_comp = channel_fc64_scaled - np.average(channel_fc64_scaled)
             self.channel_out = channel_fc64_dc_comp
         elif iq_format == "fc64":
-            self.channel_out = np.fromfile(iq_filename, np.complex64)
+            if iq_filename:
+                self.channel_out = np.fromfile(iq_filename, np.complex64)
+            elif iq_data is not None:
+                self.channel_out = iq_data
+            else:
+                raise ValueError("Must give iq_filename or iq_data")
         else:
             raise ValueError("Unsupported format {}".format(iq_format))
 
