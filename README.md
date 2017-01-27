@@ -60,3 +60,9 @@ Licence
 =======
 MIT. See LICENCE for details.
 
+TODO
+====
+Improve the sync code, to make sure we align the pictures each time.
+
+Generate long-term visualisations, to see if there is a change over several
+days.
