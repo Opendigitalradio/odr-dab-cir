@@ -62,7 +62,12 @@ MIT. See LICENCE for details.
 
 TODO
 ====
-Improve the sync code, to make sure we align the pictures each time.
+Improve the sync code, to make sure we align the pictures each time. Align on
+the strongest peak instead of the NULL symbol.
 
 Generate long-term visualisations, to see if there is a change over several
 days.
+
+Oversample 2x or 4x to get finer time resolution.
+
+Make sure rtl_tcp quits properly on ctrl-c.
